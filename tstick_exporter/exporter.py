@@ -5,6 +5,10 @@
 #prometheus-client
 #python-json-logger
 
+import time
+import os
+import sys
+import signal
 import os
 import faulthandler
 
@@ -28,6 +32,25 @@ logger = logging.getLogger()
 
 # Initiate Dispatcher
 disp = Dispatcher()
+
+# Add Signal Handler
+class SignalHandler():
+    def __init__(self):
+        self.shutdownCount = 0
+
+        # Register signal handler
+        signal.signal(signal.SIGINT, self._on_signal_received)
+        signal.signal(signal.SIGTERM, self._on_signal_received)
+
+    def is_shutting_down(self):
+        return self.shutdownCount > 0
+
+    def _on_signal_received(self, signal, frame):
+        if self.shutdownCount > 1:
+            logger.warning("Forcibly killing exporter")
+            sys.exit(1)
+        logger.info("Exporter is shutting down")
+        self.shutdownCount += 1
 
 # Get value from config
 def get_config_value(key, default=""):
@@ -103,7 +126,6 @@ def get_tstick_battery_data(address: str, *args: List[Any]) -> None:
                     "help": "Battery percentage"
                 }
         )
-    print(metrics)
     collect(metrics)
 
 def get_tstick_raw_data(address: str, *args: List[Any]) -> None:
@@ -244,7 +266,6 @@ def get_tstick_raw_data(address: str, *args: List[Any]) -> None:
                         "help": f"Raw capsense data for sensor {n}"
                     }
             )
-    print(metrics)
     collect(metrics)
 
 def get_tstick_ypr(address: str, *args: List[Any]) -> None:
@@ -293,10 +314,20 @@ def get_tstick_ypr(address: str, *args: List[Any]) -> None:
                 "help": "T-Stick roll in radians"
             }
     )
-    print(metrics)
     collect(metrics)
 
 def main():
+    #initialise Logger
+    logHandler = logging.StreamHandler()
+    formatter = jsonlogger.JsonFormatter(
+        "%(asctime) %(levelname) %(message)",
+        datefmt="%Y-%m-%d %H:%M:%S"
+    )
+    logHandler.setFormatter(formatter)
+    logger.addHandler(logHandler)
+    logger.setLevel("INFO")  # set logger level
+
+    # Read config
     config = {
         "osc_port": int(get_config_value("OSC_PORT", "8080")),
         "exporter_port": int(get_config_value("EXPORTER_PORT", "8000")),
@@ -306,16 +337,11 @@ def main():
     ip = "127.0.0.1"
     osc_port = config["osc_port"]
     exporter_port = config["exporter_port"]
+    logger.setLevel(config["log_level"])  # set logger level
 
-    #initialise Logger
-    logHandler = logging.StreamHandler()
-    formatter = jsonlogger.JsonFormatter(
-        "%(asctime) %(levelname) %(message)",
-        datefmt="%Y-%m-%d %H:%M:%S"
-    )
-    logHandler.setFormatter(formatter)
-    logger.addHandler(logHandler)
-    logger.setLevel(config["log_level"])  # default until config is loaded
+    
+    # Register signal handler
+    signal_handler = SignalHandler()
     
     # Start Prometheus server
     start_http_server(exporter_port)
@@ -327,7 +353,15 @@ def main():
 
     # Set up OSC Server
     server = osc_server.ThreadingOSCUDPServer((ip,osc_port),disp)
-    print("Servering on {}".format(server.server_address))
+    logger.info("Server on {}".format(server.server_address))
     server.serve_forever()
 
+    # run forever
+    while not signal_handler.is_shutting_down():
+        time.sleep(1)
+    
+    # shutdown text
+    logger.info("Exporter has shutdown")
 
+if __name__ == "__main__":
+    main()
