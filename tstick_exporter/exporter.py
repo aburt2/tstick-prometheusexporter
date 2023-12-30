@@ -79,6 +79,9 @@ def collect(metrics):
 
 
 def get_tstick_battery_data(address: str, *args: List[Any]) -> None:
+    # Print OSC address
+    logger.info(address)
+
     # Set up empty metrics array
     metrics = []
 
@@ -129,7 +132,10 @@ def get_tstick_battery_data(address: str, *args: List[Any]) -> None:
     collect(metrics)
 
 def get_tstick_raw_data(address: str, *args: List[Any]) -> None:
-        # Set up empty metrics array
+    # Print OSC address
+    logger.info(address)
+
+    # Set up empty metrics array
     metrics = []
 
     # Parce the OSC message for the tstick ID
@@ -269,6 +275,9 @@ def get_tstick_raw_data(address: str, *args: List[Any]) -> None:
     collect(metrics)
 
 def get_tstick_ypr(address: str, *args: List[Any]) -> None:
+    # Print OSC address
+    logger.info(address)
+    
     # Set up empty metrics array
     metrics = []
 
