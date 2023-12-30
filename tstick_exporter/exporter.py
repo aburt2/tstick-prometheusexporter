@@ -5,10 +5,7 @@
 #prometheus-client
 #python-json-logger
 
-import time
 import os
-import sys
-import signal
 import faulthandler
 
 from prometheus_client import start_http_server
@@ -301,7 +298,7 @@ def get_tstick_ypr(address: str, *args: List[Any]) -> None:
 
 def main():
     config = {
-        "osc_port": get_config_value("OSC_PORT", ""),
+        "osc_port": int(get_config_value("OSC_PORT", "8080")),
         "exporter_port": int(get_config_value("EXPORTER_PORT", "8000")),
         "log_level": get_config_value("EXPORTER_LOG_LEVEL", "INFO"),
     }
