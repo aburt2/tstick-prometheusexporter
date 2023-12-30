@@ -343,7 +343,7 @@ def main():
         "log_level": get_config_value("EXPORTER_LOG_LEVEL", "INFO"),
     }
 
-    ip = "127.0.0.1"
+    ip = "0.0.0.0"
     osc_port = config["osc_port"]
     exporter_port = config["exporter_port"]
     logger.setLevel(config["log_level"])  # set logger level
