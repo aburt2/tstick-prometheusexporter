@@ -14,6 +14,7 @@ import faulthandler
 
 from prometheus_client import start_http_server
 from prometheus_client.core import GaugeMetricFamily, CounterMetricFamily, REGISTRY
+from prometheus_client.registry import Collector
 
 # logging
 import logging
@@ -64,23 +65,33 @@ def get_config_value(key, default=""):
 
     return os.environ.get(key, default)
 
-def collect(metrics):
-    # collect metrics and send to prometheus
-    for metric in metrics:
-        name = metric["name"]
-        value = metric["value"]
-        help_text = metric.get("help","")
-        labels = metric.get("labels", {})
+# Create custom collector
+class TStickCollector(Collector):
+    def __init__(self):
+        metrics = []
+    
+    def update(self,metrics):
+        self.metrics = metrics
+        self.collect()
+    
+    def collect(self):
+        # collect metrics and send to prometheus
+        for metric in self.metrics:
+            name = metric["name"]
+            value = metric["value"]
+            help_text = metric.get("help","")
+            labels = metric.get("labels", {})
 
-        prom_metric = GaugeMetricFamily(name, help_text, labels = labels.keys())
-        prom_metric.add_metric(value=value, labels=labels.values())
-        yield prom_metric
-        logger.info(prom_metric)
+            prom_metric = GaugeMetricFamily(name, help_text, labels = labels.keys())
+            prom_metric.add_metric(value=value, labels=labels.values())
+            yield prom_metric
+            logger.debug(prom_metric)
 
+tstickCollector = TStickCollector()
 
 def get_tstick_battery_data(address: str, *args: List[Any]) -> None:
     # Print OSC address
-    logger.info(address)
+    logger.debug(address)
 
     # Set up empty metrics array
     metrics = []
@@ -129,11 +140,11 @@ def get_tstick_battery_data(address: str, *args: List[Any]) -> None:
                     "help": "Battery percentage"
                 }
         )
-    collect(metrics)
+    tstickCollector.update(metrics)
 
 def get_tstick_raw_data(address: str, *args: List[Any]) -> None:
     # Print OSC address
-    logger.info(address)
+    logger.debug(address)
 
     # Set up empty metrics array
     metrics = []
@@ -272,11 +283,11 @@ def get_tstick_raw_data(address: str, *args: List[Any]) -> None:
                         "help": f"Raw capsense data for sensor {n}"
                     }
             )
-    collect(metrics)
+    tstickCollector.update(metrics)
 
 def get_tstick_ypr(address: str, *args: List[Any]) -> None:
     # Print OSC address
-    logger.info(address)
+    logger.debug(address)
     
     # Set up empty metrics array
     metrics = []
@@ -323,7 +334,7 @@ def get_tstick_ypr(address: str, *args: List[Any]) -> None:
                 "help": "T-Stick roll in radians"
             }
     )
-    collect(metrics)
+    tstickCollector.update(metrics)
 
 def main():
     #initialise Logger
@@ -351,6 +362,9 @@ def main():
     
     # Register signal handler
     signal_handler = SignalHandler()
+
+    # Register metrics
+    REGISTRY.register(tstickCollector)
     
     # Start Prometheus server
     start_http_server(exporter_port)
