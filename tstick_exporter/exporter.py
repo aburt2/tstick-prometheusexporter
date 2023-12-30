@@ -68,7 +68,7 @@ def get_config_value(key, default=""):
 # Create custom collector
 class TStickCollector(Collector):
     def __init__(self):
-        metrics = []
+        self.metrics = []
     
     def update(self,metrics):
         # Update the metrics stored in the collector class
