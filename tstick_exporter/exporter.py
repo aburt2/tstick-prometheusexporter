@@ -88,6 +88,9 @@ class TStickCollector(Collector):
             prom_metric.add_metric(value=value, labels=labels.values())
             yield prom_metric
             logger.debug(prom_metric)
+        
+        # empty metrics again for next request
+        self.metrics = []
 
 tstickCollector = TStickCollector()
 
