@@ -71,8 +71,10 @@ class TStickCollector(Collector):
         metrics = []
     
     def update(self,metrics):
-        self.metrics = metrics
-        self.collect()
+        # Update the metrics stored in the collector class
+        tmp = self.metrics
+        tmp.extend(metrics)
+        self.metrics = tmp
     
     def collect(self):
         # collect metrics and send to prometheus
