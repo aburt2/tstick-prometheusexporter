@@ -373,8 +373,8 @@ def main():
 
     # Set up dispatcher
     disp.map("/TStick_*/battery/*",get_tstick_battery_data)
-    disp.map("/TStick_*/raw/*",get_tstick_raw_data)
-    disp.map("/TStick_*/ypr*",get_tstick_ypr)
+    # disp.map("/TStick_*/raw/*",get_tstick_raw_data)
+    # disp.map("/TStick_*/ypr*",get_tstick_ypr)
 
     # Set up OSC Server
     server = osc_server.ThreadingOSCUDPServer((ip,osc_port),disp)
