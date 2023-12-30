@@ -24,7 +24,7 @@ from pythonosc.dispatcher import Dispatcher
 from typing import List, Any
 
 # Setup server
-from pythonosc.osc_server import BlockingOSCUDPServer
+from pythonosc import osc_server
 
 # Enable loging
 faulthandler.enable()
@@ -361,7 +361,7 @@ def main():
     disp.map("/TStick_*/ypr*",get_tstick_ypr)
 
     # Set up OSC Server
-    server = BlockingOSCUDPServer((ip,osc_port),disp)
+    server = osc_server.ThreadingOSCUDPServer((ip,osc_port),disp)
     logger.info("Server on {}".format(server.server_address))
     server.serve_forever()
 
