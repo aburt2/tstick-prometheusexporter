@@ -1,9 +1,6 @@
-FROM alpine:3.18.4
+FROM python:3.11-alpine
 
 # Installing required packages
-FROM alpine/doctl
-ENV PYTHONUNBUFFERED=1
-RUN apk add --update --no-cache python3 && ln -sf python3 /usr/bin/python
 RUN pip3 install --no-cache --upgrade pip setuptools
 
 # Install package
