@@ -79,7 +79,7 @@ class TStickCollector(Collector):
     
     def collect(self):       
         # Send latest time
-        now = time.perf_counter()
+        now = time.time()
         tmp = []
 
         # Update global time
@@ -116,7 +116,7 @@ def get_tstick_battery_current(address: str, *args: List[Any]) -> None:
     logger.debug(address)
 
     # get time
-    now = time.perf_counter()
+    now = time.time()
 
     # Set up empty metrics array
     metrics = []
@@ -156,7 +156,7 @@ def get_tstick_battery_voltage(address: str, *args: List[Any]) -> None:
     logger.debug(address)
 
     # get time
-    now = time.perf_counter()
+    now = time.time()
 
     # Set up empty metrics array
     metrics = []
@@ -196,7 +196,7 @@ def get_tstick_battery_percentage(address: str, *args: List[Any]) -> None:
     logger.debug(address)
 
     # get time
-    now = time.perf_counter()
+    now = time.time()
 
     # Set up empty metrics array
     metrics = []
