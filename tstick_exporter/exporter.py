@@ -69,14 +69,31 @@ def get_config_value(key, default=""):
 class TStickCollector(Collector):
     def __init__(self):
         self.metrics = []
-    
+        self.prev = 0
+
     def update(self,metrics):
         # Update the metrics stored in the collector class
         tmp = self.metrics
         tmp.extend(metrics)
         self.metrics = tmp
     
-    def collect(self):
+    def collect(self):       
+        # Send latest time
+        now = time.perf_counter()
+        tmp = []
+
+        # Update global time
+        tmp.append(
+                {
+                    "name": "tstick_global_time",
+                    "value": now,
+                    "help": "Battery current in mA"
+                }
+        )
+
+        # add it to metrics
+        self.metrics.extend(tmp)
+
         # collect metrics and send to prometheus
         for metric in self.metrics:
             name = metric["name"]
@@ -94,9 +111,12 @@ class TStickCollector(Collector):
 
 tstickCollector = TStickCollector()
 
-def get_tstick_battery_data(address: str, *args: List[Any]) -> None:
+def get_tstick_battery_current(address: str, *args: List[Any]) -> None:
     # Print OSC address
     logger.debug(address)
+
+    # get time
+    now = time.perf_counter()
 
     # Set up empty metrics array
     metrics = []
@@ -104,241 +124,112 @@ def get_tstick_battery_data(address: str, *args: List[Any]) -> None:
     # Parce the OSC message for the tstick ID
     tstickID = address[1:11]
 
-    # Parse which propery
-    battery_property = address[20:]
     # append battery data
-    if (battery_property == "current"):
-        metrics.append(
-                {
-                    "name": "tstick_battery_current",
-                    "value": args[0],
-                    "labels": {
-                        "tstickID": tstickID,
+    metrics.append(
+            {
+                "name": "tstick_battery_current",
+                "value": args[0],
+                "labels": {
+                    "tstickID": tstickID,
 
-                    },
-                    "help": "Battery current in mA"
-                }
-        )
-    
-    if (battery_property == "voltage"):
-        metrics.append(
-                {
-                    "name": "tstick_battery_voltage",
-                    "value": args[0],
-                    "labels": {
-                        "tstickID": tstickID,
+                },
+                "help": "Battery current in mA"
+            }
+    )
 
-                    },
-                    "help": "Battery voltage in V"
-                }
-        )
-    
-    if (battery_property == "percentage"):
-        metrics.append(
-                {
-                    "name": "tstick_battery_percentage",
-                    "value": args[0],
-                    "labels": {
-                        "tstickID": tstickID,
+    # append local time
+    metrics.append(
+            {
+                "name": "tstick_local_time",
+                "value": now,
+                "labels": {
+                    "tstickID": tstickID,
 
-                    },
-                    "help": "Battery percentage"
-                }
-        )
+                },
+                "help": "current local counter"
+            }
+    )
     tstickCollector.update(metrics)
 
-def get_tstick_raw_data(address: str, *args: List[Any]) -> None:
+def get_tstick_battery_voltage(address: str, *args: List[Any]) -> None:
     # Print OSC address
     logger.debug(address)
+
+    # get time
+    now = time.perf_counter()
 
     # Set up empty metrics array
     metrics = []
 
     # Parce the OSC message for the tstick ID
     tstickID = address[1:11]
-    
-    # Parce the arguments
-    raw_property = address[16:]
 
+    metrics.append(
+            {
+                "name": "tstick_battery_voltage",
+                "value": args[0],
+                "labels": {
+                    "tstickID": tstickID,
 
-    if (raw_property == "fsr"):
-        metrics.append(
-                {
-                    "name": "tstick_fsr",
-                    "value": args[0],
-                    "labels": {
-                        "tstickID": tstickID,
+                },
+                "help": "Battery voltage in V"
+            }
+    )
 
-                    },
-                    "help": "raw FSR value"
-                }
-        )
-    if (raw_property == "accl"):
-        metrics.append(
-                {
-                    "name": "tstick_acclx",
-                    "value": args[0],
-                    "labels": {
-                        "tstickID": tstickID,
+    # append local time
+    metrics.append(
+            {
+                "name": "tstick_local_time",
+                "value": now,
+                "labels": {
+                    "tstickID": tstickID,
 
-                    },
-                    "help": "Raw accelerometer x-axis data (m/s/s)"
-                }
-        )
-        metrics.append(
-                {
-                    "name": "tstick_accly",
-                    "value": args[1],
-                    "labels": {
-                        "tstickID": tstickID,
+                },
+                "help": "current local counter"
+            }
+    )
 
-                    },
-                    "help":  "Raw accelerometer y-axis data (m/s/s)"
-                }
-        )
-        metrics.append(
-                {
-                    "name": "tstick_acclz",
-                    "value": args[2],
-                    "labels": {
-                        "tstickID": tstickID,
-
-                    },
-                    "help":  "Raw accelerometer z-axis data (m/s/s)"
-                }
-        )        
-    if (raw_property == "gyro"):
-        metrics.append(
-                {
-                    "name": "tstick_gyrox",
-                    "value": args[0],
-                    "labels": {
-                        "tstickID": tstickID,
-
-                    },
-                    "help": "Raw gyrometer x-axis data (deg/s)"
-                }
-        )
-        metrics.append(
-                {
-                    "name": "tstick_gyroy",
-                    "value": args[1],
-                    "labels": {
-                        "tstickID": tstickID,
-
-                    },
-                    "help":  "Raw gyrometer y-axis data (deg/s)"
-                }
-        )
-        metrics.append(
-                {
-                    "name": "tstick_gyroz",
-                    "value": args[2],
-                    "labels": {
-                        "tstickID": tstickID,
-
-                    },
-                    "help":  "Raw gyrometer z-axis data (deg/s)"
-                }
-        )   
-    if (raw_property == "magn"):
-        metrics.append(
-                {
-                    "name": "tstick_magnx",
-                    "value": args[0],
-                    "labels": {
-                        "tstickID": tstickID,
-
-                    },
-                    "help": "Raw magnetometer x-axis data (uT)"
-                }
-        )
-        metrics.append(
-                {
-                    "name": "tstick_magny",
-                    "value": args[1],
-                    "labels": {
-                        "tstickID": tstickID,
-
-                    },
-                    "help":  "Raw magnetometer y-axis data (uT)"
-                }
-        )
-        metrics.append(
-                {
-                    "name": "tstick_magnz",
-                    "value": args[2],
-                    "labels": {
-                        "tstickID": tstickID,
-
-                    },
-                    "help":  "Raw magnetometer z-axis data (uT)"
-                }
-        )   
-    if (raw_property == "capsense"):
-        for n in range(len(args)):
-            metrics.append(
-                    {
-                        "name": f"tstick_capsense_{n}",
-                        "value": args[n],
-                        "labels": {
-                            "tstickID": tstickID,
-
-                        },
-                        "help": f"Raw capsense data for sensor {n}"
-                    }
-            )
     tstickCollector.update(metrics)
 
-def get_tstick_ypr(address: str, *args: List[Any]) -> None:
+def get_tstick_battery_percentage(address: str, *args: List[Any]) -> None:
     # Print OSC address
     logger.debug(address)
-    
+
+    # get time
+    now = time.perf_counter()
+
     # Set up empty metrics array
     metrics = []
 
     # Parce the OSC message for the tstick ID
     tstickID = address[1:11]
 
-    # Parse ypr
-    yaw = args[0]
-    pitch = args[1]
-    roll = args[2]
-
-    # append to metric
+    # append battery data
     metrics.append(
             {
-                "name": "tstick_yaw",
-                "value": yaw,
+                "name": "tstick_battery_percentage",
+                "value": args[0],
                 "labels": {
                     "tstickID": tstickID,
 
                 },
-                "help": "T-Stick yaw in radians"
+                "help": "Battery percentage"
             }
     )
+
+    # append local time
     metrics.append(
             {
-                "name": "tstick_pitch",
-                "value": pitch,
+                "name": "tstick_local_time",
+                "value": now,
                 "labels": {
                     "tstickID": tstickID,
 
                 },
-                "help": "T-Stick pitch in radians"
+                "help": "current local counter"
             }
     )
-    metrics.append(
-            {
-                "name": "tstick_roll",
-                "value": roll,
-                "labels": {
-                    "tstickID": tstickID,
 
-                },
-                "help": "T-Stick roll in radians"
-            }
-    )
     tstickCollector.update(metrics)
 
 def main():
@@ -375,9 +266,9 @@ def main():
     start_http_server(exporter_port)
 
     # Set up dispatcher
-    disp.map("/TStick_*/battery/*",get_tstick_battery_data)
-    # disp.map("/TStick_*/raw/*",get_tstick_raw_data)
-    # disp.map("/TStick_*/ypr*",get_tstick_ypr)
+    disp.map("/TStick_*/battery/current*",get_tstick_battery_current)
+    disp.map("/TStick_*/battery/voltage*",get_tstick_battery_voltage)
+    disp.map("/TStick_*/battery/percentage*",get_tstick_battery_percentage)
 
     # Set up OSC Server
     server = osc_server.ThreadingOSCUDPServer((ip,osc_port),disp)
