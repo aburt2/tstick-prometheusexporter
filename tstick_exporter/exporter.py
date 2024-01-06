@@ -232,6 +232,92 @@ def get_tstick_battery_percentage(address: str, *args: List[Any]) -> None:
 
     tstickCollector.update(metrics)
 
+def get_tstick_battery_tte(address: str, *args: List[Any]) -> None:
+    # Print OSC address
+    logger.debug(address)
+
+    # get time
+    now = time.time()
+
+    # Set up empty metrics array
+    metrics = []
+
+    # Parce the OSC message for the tstick ID
+    tstickID = address[1:11]
+
+    # append battery data
+    metrics.append(
+            {
+                "name": "tstick_battery_tte",
+                "value": args[0],
+                "labels": {
+                    "tstickID": tstickID,
+
+                },
+                "help": "Battery time to empty (hours)"
+            }
+    )
+
+    # append local time
+    metrics.append(
+            {
+                "name": "tstick_local_time",
+                "value": now,
+                "labels": {
+                    "tstickID": tstickID,
+
+                },
+                "help": "current local counter"
+            }
+    )
+
+    tstickCollector.update(metrics)
+
+def get_tstick_osc_rate(address: str, *args: List[Any]) -> None:
+    # Print OSC address
+    logger.debug(address)
+
+    # get time
+    now = time.time()
+
+    # get time passed
+    passed = now - tstickCollector.prev
+    tstickCollector.prev = now
+
+    # Set up empty metrics array
+    metrics = []
+
+    # Parce the OSC message for the tstick ID
+    tstickID = address[1:11]
+
+    # append battery data
+    metrics.append(
+            {
+                "name": "tstick_osc_rate",
+                "value": passed,
+                "labels": {
+                    "tstickID": tstickID,
+
+                },
+                "help": "time since last osc message"
+            }
+    )
+
+    # append local time
+    metrics.append(
+            {
+                "name": "tstick_local_time",
+                "value": now,
+                "labels": {
+                    "tstickID": tstickID,
+
+                },
+                "help": "current local counter"
+            }
+    )
+
+    tstickCollector.update(metrics)
+
 def main():
     #initialise Logger
     logHandler = logging.StreamHandler()
@@ -269,6 +355,8 @@ def main():
     disp.map("/TStick_*/battery/current*",get_tstick_battery_current)
     disp.map("/TStick_*/battery/voltage*",get_tstick_battery_voltage)
     disp.map("/TStick_*/battery/percentage*",get_tstick_battery_percentage)
+    disp.map("/TStick_*/battery/tte*",get_tstick_battery_tte)
+    disp.map("/TStick_*/raw/fsr*",get_tstick_osc_rate)
 
     # Set up OSC Server
     server = osc_server.ThreadingOSCUDPServer((ip,osc_port),disp)
