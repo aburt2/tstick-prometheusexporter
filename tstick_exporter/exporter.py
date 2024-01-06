@@ -87,7 +87,7 @@ class TStickCollector(Collector):
                 {
                     "name": "tstick_global_time",
                     "value": now,
-                    "help": "Battery current in mA"
+                    "help": "global counter"
                 }
         )
 
@@ -325,4 +325,4 @@ def main():
     logger.info("Exporter has shutdown")
 
 if __name__ == "__main__":
-    main()
+    main() 
